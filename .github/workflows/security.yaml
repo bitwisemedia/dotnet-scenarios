@@ -1,0 +1,39 @@
+# Security analysis — thin caller for the bitwise-media-group reusable security
+# workflow. It runs CodeQL over the repository's GitHub Actions workflows and the
+# C# project, on every push and pull request plus a weekly scheduled run so newly
+# published queries reach already-merged code.
+#
+# The reusable workflow auto-detects languages from the repo root (actions always,
+# go from go.mod, javascript-typescript from package.json); it has no probe for a
+# .NET solution, so the matrix is pinned explicitly through the `languages` input.
+# csharp is analysed build-free (CodeQL build-mode: none) — the extractor reads the
+# source directly, so no .NET SDK setup or project build is needed in the analysis
+# job.
+#
+# The reusable workflow is pinned to a full commit SHA (tag in the comment) so a
+# moved tag can never change what runs.
+name: Security Analysis
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "28 20 * * 4"
+
+# ceiling for the reusable workflow's analyze job
+permissions:
+  # upload analysis results to code scanning
+  security-events: write
+  # fetch internal or private CodeQL packs
+  packages: read
+  # only required for workflows in private repositories
+  actions: read
+  # check out the repository
+  contents: read
+
+jobs:
+  analyze:
+    uses: bitwise-media-group/github-workflows/.github/workflows/security.yaml@b9c031429f149794bedb5411b08d5a787b8d9959 # v6.0.1
+    with:
+      languages: actions,csharp

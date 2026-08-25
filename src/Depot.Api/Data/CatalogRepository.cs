@@ -23,8 +23,9 @@ public sealed class CatalogRepository
         using var command = connection.CreateCommand();
         command.CommandText =
             "SELECT AssetTag, Name, Category, Location, Quantity FROM Parts " +
-            "WHERE Name LIKE '%" + term + "%' " +
+            "WHERE Name LIKE @namePattern " +
             "ORDER BY Name";
+        AddParameter(command, "@namePattern", "%" + term + "%");
 
         return ReadParts(command);
     }
@@ -39,9 +40,18 @@ public sealed class CatalogRepository
         using var command = connection.CreateCommand();
         command.CommandText =
             "SELECT AssetTag, Name, Category, Location, Quantity FROM Parts " +
-            "WHERE AssetTag = '" + assetTag + "'";
+            "WHERE AssetTag = @assetTag";
+        AddParameter(command, "@assetTag", assetTag);
 
         return ReadParts(command).FirstOrDefault();
+    }
+
+    private static void AddParameter(System.Data.IDbCommand command, string name, string value)
+    {
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = name;
+        parameter.Value = value;
+        command.Parameters.Add(parameter);
     }
 
     private static List<Part> ReadParts(System.Data.IDbCommand command)

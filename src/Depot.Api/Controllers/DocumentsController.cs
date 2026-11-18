@@ -20,6 +20,10 @@ public sealed class DocumentsController : ControllerBase
             var stream = _store.OpenDocument(name);
             return File(stream, "application/octet-stream", name);
         }
+        catch (ArgumentException)
+        {
+            return BadRequest("invalid document name");
+        }
         catch (FileNotFoundException)
         {
             return NotFound();

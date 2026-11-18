@@ -28,6 +28,17 @@ public sealed class DocumentStoreTests : IDisposable
         Assert.Equal("hello", reader.ReadToEnd());
     }
 
+    [Theory]
+    [InlineData("../secrets.txt")]
+    [InlineData("sub/../../secrets.txt")]
+    [InlineData("/etc/passwd")]
+    [InlineData(@"..\secrets.txt")]
+    [InlineData(@"C:\Windows\win.ini")]
+    public void OpenDocument_RejectsPathTraversal(string name)
+    {
+        Assert.Throws<ArgumentException>(() => _store.OpenDocument(name));
+    }
+
     [Fact]
     public void OpenManifest_RejectsNonGuidBatchId()
     {

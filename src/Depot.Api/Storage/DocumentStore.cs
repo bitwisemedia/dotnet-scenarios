@@ -17,9 +17,16 @@ public sealed partial class DocumentStore
     /// <summary>
     /// Opens a stored attachment for reading. <paramref name="name"/> is the file
     /// name as it was registered against the part (e.g. "warranty-LAP-0417.pdf").
+    /// It must be a bare file name — no directory separators or traversal segments
+    /// are allowed, since those would let it escape <see cref="StorageOptions.DocumentRoot"/>.
     /// </summary>
     public Stream OpenDocument(string name)
     {
+        if (name.Contains('/') || name.Contains('\\') || name.Contains("..") || name.Contains(':'))
+        {
+            throw new ArgumentException("document name must be a bare file name", nameof(name));
+        }
+
         var path = Path.Combine(_root, name);
         return File.OpenRead(path);
     }
